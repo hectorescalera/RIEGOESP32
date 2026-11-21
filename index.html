@@ -1,0 +1,550 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Riego Inteligente - ESP32</title>
+  
+  <!-- Google Fonts & Material Symbols -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet">
+  
+  <!-- Estilos Puros -->
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+  <!-- TOP HEADER -->
+  <header class="app-header">
+    <div class="header-container">
+      <div class="header-brand">
+        <div class="brand-logo-box">
+          <span class="material-symbols-outlined">eco</span>
+        </div>
+        <div class="brand-info">
+          <h1 class="brand-title">Riego Inteligente</h1>
+          <div class="brand-meta">
+            <span class="node-version">ESP32 Node v2</span>
+            <span class="dot-separator">•</span>
+            <span class="online-pill">
+              <span class="ping-wrapper">
+                <span class="ping-circle"></span>
+                <span class="ping-dot"></span>
+              </span>
+              <span class="online-text">Online</span>
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <div class="header-actions">
+        <button type="button" class="icon-btn" id="header-sync-btn" aria-label="Actualizar datos">
+          <span class="material-symbols-outlined">sync</span>
+        </button>
+        <a href="#umbrales" class="icon-btn nav-trigger" data-target="umbrales-y-horarios" aria-label="Ajustes y configuración">
+          <span class="material-symbols-outlined">settings</span>
+        </a>
+        <div class="user-avatar">
+          <span class="material-symbols-outlined">person</span>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- TOAST NOTIFICATION CONTAINER (Pantalla Umbrales) -->
+  <div class="toast-esp32" id="toast-esp32" role="status" aria-live="polite">
+    <div class="toast-left">
+      <span class="material-symbols-outlined toast-icon">cloud_sync</span>
+      <div class="toast-text-col">
+        <p class="toast-title" id="toast-title">Parámetros sincronizados</p>
+        <p class="toast-subtitle" id="toast-subtitle">Flash EEPROM del ESP32 actualizada con éxito.</p>
+      </div>
+    </div>
+    <button type="button" class="toast-close-btn" id="toast-close-btn" aria-label="Cerrar notificación">
+      <span class="material-symbols-outlined">close</span>
+    </button>
+  </div>
+
+  <!-- MAIN CONTENT -->
+  <main class="app-main">
+    <div class="dashboard-stack">
+
+      <!-- 1. BANNER DE CONEXIÓN HARDWARE IOT -->
+      <section class="hardware-banner" id="diagnostico-section">
+        <div class="hw-left">
+          <div class="ping-wrapper-lg">
+            <span class="ping-circle"></span>
+            <span class="ping-dot-lg"></span>
+          </div>
+          <div class="hw-details">
+            <div class="hw-title-row">
+              <span class="hw-status-title">ESP32 Online</span>
+              <span class="wifi-badge">
+                <span class="material-symbols-outlined icon-xs">wifi</span>
+                -58 dBm
+              </span>
+            </div>
+            <span class="sync-timestamp" id="sync-timer">Última sincronización: Hace 12 seg</span>
+          </div>
+        </div>
+
+        <div class="hw-right">
+          <span class="ip-badge">192.168.1.142</span>
+          <button type="button" class="refresh-circle-btn" id="refresh-btn" aria-label="Sincronizar telemetría">
+            <span class="material-symbols-outlined icon-md" id="refresh-icon">sync</span>
+          </button>
+        </div>
+      </section>
+
+      <!-- =================================================================
+           PANTALLA 1: INICIO PANEL (Panel Principal)
+           ================================================================= -->
+      <div id="view-inicio-panel" class="tab-view active">
+        
+        <!-- SECCIÓN 1: ESTADO Y HUMEDAD DEL SUELO -->
+        <article class="card">
+          <div class="card-header-start">
+            <div class="plant-identity">
+              <div class="plant-icon-box">
+                <span class="material-symbols-outlined icon-lg">potted_plant</span>
+              </div>
+              <div class="plant-titles">
+                <h2 class="card-headline" id="dashboard-plant-name">Monstera Deliciosa</h2>
+                <span class="card-subtitle">Humedad del Suelo • HW-080</span>
+              </div>
+            </div>
+            <span class="calibrated-badge">
+              <span class="pulse-dot"></span>
+              HW-080 Calibrado
+            </span>
+          </div>
+
+          <!-- Gauge Semicircular Hero -->
+          <div class="gauge-container">
+            <div class="gauge-svg-wrapper">
+              <svg class="gauge-svg" viewBox="0 0 200 100">
+                <defs>
+                  <linearGradient id="gauge-grad" x1="0%" y1="0%" x2="100%" y2="0%">
+                    <stop offset="0%" stop-color="#854600"></stop>
+                    <stop offset="35%" stop-color="#00652c"></stop>
+                    <stop offset="70%" stop-color="#00652c"></stop>
+                    <stop offset="100%" stop-color="#006398"></stop>
+                  </linearGradient>
+                </defs>
+                <path class="gauge-track" d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke-linecap="round" stroke-width="14"></path>
+                <path id="gauge-arc" class="gauge-progress" d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke="url(#gauge-grad)" stroke-dasharray="251.3" stroke-dashoffset="90.5" stroke-linecap="round" stroke-width="14"></path>
+              </svg>
+              <div class="gauge-readout">
+                <span class="metric-number" id="moisture-val">64</span>
+                <span class="metric-unit">%</span>
+              </div>
+            </div>
+
+            <div class="status-pill-optimal" id="moisture-status-pill">
+              <span class="material-symbols-outlined icon-sm filled-icon">eco</span>
+              <span class="status-pill-text" id="moisture-status-text">Húmedo • Nivel Óptimo</span>
+            </div>
+          </div>
+
+          <!-- Barra segmentada de 5 zonas -->
+          <div class="zones-wrapper">
+            <div class="zones-bar">
+              <div class="zone-seg zone-very-dry" title="Muy Seco <20%"></div>
+              <div class="zone-seg zone-dry" title="Seco 20-40%"></div>
+              <div class="zone-seg zone-medium" title="Medio 40-60%"></div>
+              <div class="zone-seg zone-moist active-zone" title="Húmedo 60-80%"></div>
+              <div class="zone-seg zone-wet" title="Muy Húmedo >80%"></div>
+            </div>
+            <div class="zones-labels">
+              <div class="zone-label-item">
+                <span class="z-name text-error">Muy Seco</span>
+                <span class="z-range">&lt;20%</span>
+              </div>
+              <div class="zone-label-item">
+                <span class="z-name text-tertiary">Seco</span>
+                <span class="z-range">20-40%</span>
+              </div>
+              <div class="zone-label-item">
+                <span class="z-name text-variant">Medio</span>
+                <span class="z-range">40-60%</span>
+              </div>
+              <div class="zone-label-item zone-highlight">
+                <span class="z-name text-primary bold">Húmedo</span>
+                <span class="z-range text-primary bold">60-80%</span>
+              </div>
+              <div class="zone-label-item">
+                <span class="z-name text-secondary">Muy Húmedo</span>
+                <span class="z-range">&gt;80%</span>
+              </div>
+            </div>
+          </div>
+        </article>
+
+        <!-- SECCIÓN 2: CONTROL DE RIEGO -->
+        <article class="card">
+          <div class="card-header-between">
+            <div class="section-title-group">
+              <div class="section-icon-box bg-sec-fixed text-secondary">
+                <span class="material-symbols-outlined icon-md">valve</span>
+              </div>
+              <h3 class="section-title">Control de Riego</h3>
+            </div>
+            <span class="hardware-tag">Electrobomba 12V</span>
+          </div>
+
+          <!-- Tarjeta de estado de bomba -->
+          <div class="pump-status-box" id="pump-status-card">
+            <div class="pump-info-left">
+              <div class="pump-icon-square" id="pump-icon-bg">
+                <span class="material-symbols-outlined icon-lg" id="pump-icon">water_drop</span>
+              </div>
+              <div class="pump-text-col">
+                <span class="pump-title" id="pump-title">Bomba en reposo</span>
+                <span class="pump-desc" id="pump-desc">Lista para activarse si la humedad cae bajo 40%</span>
+              </div>
+            </div>
+            <div class="pump-badge">
+              <span class="pump-dot" id="pump-indicator-light"></span>
+              <span class="pump-badge-text" id="pump-indicator-text">Standby</span>
+            </div>
+          </div>
+
+          <!-- Botón de Acción Manual -->
+          <div class="pump-actions-col">
+            <button type="button" class="btn-primary-irrigate" id="irrigate-manual-btn">
+              <span class="material-symbols-outlined icon-md">shower</span>
+              <span id="btn-irrigate-label">Activar riego manual (15 seg)</span>
+            </button>
+          </div>
+
+          <!-- Estadísticas del último riego -->
+          <div class="last-watering-footer">
+            <span class="last-watering-time">
+              <span class="material-symbols-outlined icon-sm text-outline">history</span>
+              Último riego: Hoy 08:30 AM
+            </span>
+            <span class="water-volume-pill">
+              <span class="material-symbols-outlined icon-xs">opacity</span>
+              <span id="last-water-ml">250 ml</span> aplicados
+            </span>
+          </div>
+        </article>
+
+        <!-- SECCIÓN 3: TELEMETRÍA Y TENDENCIAS -->
+        <article class="card" id="historial-section">
+          <div class="card-header-between">
+            <div class="section-title-group">
+              <div class="section-icon-box bg-pri-fixed text-primary">
+                <span class="material-symbols-outlined icon-md">monitoring</span>
+              </div>
+              <h3 class="section-title">Telemetría y Tendencias</h3>
+            </div>
+            <span class="hardware-tag">Ciclo diario 24h</span>
+          </div>
+
+          <!-- Gráfica SVG 24h -->
+          <div class="chart-box">
+            <div class="chart-header">
+              <span class="chart-subtitle">Humedad vs Umbral (<span id="chart-threshold-label">40</span>%)</span>
+              <span class="chart-current-val">Lectura actual: 64%</span>
+            </div>
+
+            <div class="chart-svg-area">
+              <svg class="telemetry-svg" viewBox="0 0 320 110" preserveAspectRatio="none">
+                <line x1="0" y1="66" x2="320" y2="66" stroke="#becabc" stroke-width="1" stroke-dasharray="3 3"></line>
+                <text id="svg-threshold-text" x="5" y="62" fill="#6f7a6e" font-family="Inter, sans-serif" font-size="9">Umbral 40%</text>
+                <defs>
+                  <linearGradient id="chart-fill" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stop-color="#15803d" stop-opacity="0.28"></stop>
+                    <stop offset="100%" stop-color="#15803d" stop-opacity="0.0"></stop>
+                  </linearGradient>
+                </defs>
+                <path d="M 0,25 C 40,28 70,35 110,48 C 150,60 190,70 215,68 C 220,60 225,38 240,40 C 265,42 290,40 320,40 L 320,110 L 0,110 Z" fill="url(#chart-fill)"></path>
+                <path d="M 0,25 C 40,28 70,35 110,48 C 150,60 190,70 215,68 C 220,60 225,38 240,40 C 265,42 290,40 320,40" fill="none" stroke="#15803d" stroke-width="2.5" stroke-linecap="round"></path>
+                <circle cx="215" cy="68" r="4" fill="#006398" stroke="#ffffff" stroke-width="1.5"></circle>
+                <circle cx="320" cy="40" r="4.5" fill="#00652c" stroke="#ffffff" stroke-width="2"></circle>
+              </svg>
+            </div>
+
+            <div class="chart-x-axis">
+              <span>Ayer 12:00</span>
+              <span>Ayer 20:00</span>
+              <span>Hoy 04:00</span>
+              <span class="text-secondary bold">08:30 (Riego)</span>
+              <span class="text-primary bold">Ahora (64%)</span>
+            </div>
+          </div>
+
+          <!-- Lista de Eventos Recientes -->
+          <div class="events-list">
+            <span class="events-section-label">Eventos Recientes</span>
+
+            <div class="event-item">
+              <div class="event-icon bg-sec-fixed text-secondary">
+                <span class="material-symbols-outlined icon-sm">water_drop</span>
+              </div>
+              <div class="event-content">
+                <span class="event-title">Riego automático activado</span>
+                <span class="event-meta">Hoy 08:30 AM — Duración 20s (umbral &lt;38% detectado)</span>
+              </div>
+            </div>
+
+            <div class="event-item">
+              <div class="event-icon bg-pri-fixed text-primary">
+                <span class="material-symbols-outlined icon-sm">sensors</span>
+              </div>
+              <div class="event-content">
+                <span class="event-title">Sensor HW-080 lectura estable</span>
+                <span class="event-meta">Hoy 04:15 AM — Humedad 48% (Nivel Medio)</span>
+              </div>
+            </div>
+
+            <div class="event-item">
+              <div class="event-icon bg-surface-container text-outline">
+                <span class="material-symbols-outlined icon-sm">cloud_sync</span>
+              </div>
+              <div class="event-content">
+                <span class="event-title">Sincronización NTP y telemetría MQTT</span>
+                <span class="event-meta">Ayer 06:00 PM — 0 paquetes perdidos (Broker Local)</span>
+              </div>
+            </div>
+          </div>
+        </article>
+      </div>
+
+      <!-- =================================================================
+           PANTALLA 2: UMBRALES Y HORARIOS (Diseño exacto de Stitch)
+           ================================================================= -->
+      <div id="view-umbrales-y-horarios" class="tab-view">
+
+        <!-- Sección 1: Perfil de la Planta -->
+        <article class="card">
+          <div class="card-header-between">
+            <div class="plant-identity">
+              <div class="icon-badge-soft bg-primary-soft text-primary">
+                <span class="material-symbols-outlined icon-lg">potted_plant</span>
+              </div>
+              <div>
+                <h2 class="section-title">Perfil de la Planta</h2>
+                <p class="card-subtitle">Identificación botánica y personalización</p>
+              </div>
+            </div>
+            <span class="zone-pill">Zona 1</span>
+          </div>
+
+          <div class="form-stack">
+            <div class="input-group">
+              <label for="plant-name-input" class="input-label">Nombre de la planta</label>
+              <div class="input-field-box">
+                <span class="material-symbols-outlined icon-md text-primary">eco</span>
+                <input type="text" id="plant-name-input" class="text-input" placeholder="Ej. Monstera Deliciosa" value="Monstera Deliciosa">
+              </div>
+            </div>
+
+            <div class="input-group">
+              <label for="plant-type-select" class="input-label">Tipo de planta</label>
+              <div class="input-field-box select-wrapper">
+                <span class="material-symbols-outlined icon-md text-primary">psychiatry</span>
+                <select id="plant-type-select" class="select-input">
+                  <option value="monstera" selected>Monstera Deliciosa (Interior tropical)</option>
+                  <option value="suculenta">Suculenta / Xerófila</option>
+                  <option value="ficus">Ficus / Árbol ornamental</option>
+                  <option value="pothos">Pothos / Colgante</option>
+                  <option value="personalizado">Personalizado</option>
+                </select>
+                <span class="material-symbols-outlined icon-md text-variant select-arrow">expand_more</span>
+              </div>
+            </div>
+          </div>
+        </article>
+
+        <!-- Sección 2: Umbral de Humedad y Escala de 5 Zonas -->
+        <article class="card">
+          <div class="card-header-start">
+            <div class="plant-identity">
+              <div class="icon-badge-soft bg-secondary-soft text-secondary">
+                <span class="material-symbols-outlined icon-lg">water_ph</span>
+              </div>
+              <div>
+                <h3 class="section-title">Umbral de Humedad</h3>
+                <p class="card-subtitle">Sonda resistiva HW-080 • ADC1</p>
+              </div>
+            </div>
+            <div class="vwc-box">
+              <span class="vwc-value" id="moisture-display">40%</span>
+              <span class="vwc-label">VWC Mínimo</span>
+            </div>
+          </div>
+
+          <!-- Escala de Humedad del Sustrato (5 zonas) -->
+          <div class="scale-container">
+            <div class="scale-header">
+              <span class="scale-title">Escala de Humedad del Sustrato</span>
+              <span class="scale-active-zone" id="scale-zone-label">Medio (40-60%)</span>
+            </div>
+            <div class="scale-pills-grid">
+              <div class="scale-pill bg-error-soft" title="Muy Seco <20%"></div>
+              <div class="scale-pill bg-tertiary-soft" title="Seco 20-40%"></div>
+              <div class="scale-pill bg-primary-solid" title="Medio 40-60%"></div>
+              <div class="scale-pill bg-secondary-soft-mid" title="Húmedo 60-80%"></div>
+              <div class="scale-pill bg-secondary-soft-low" title="Muy Húmedo >80%"></div>
+            </div>
+            <div class="scale-ticks">
+              <span>&lt;20% M.Seco</span>
+              <span>20-40% Seco</span>
+              <span class="text-primary bold">40-60% Medio</span>
+              <span>60-80% Húm.</span>
+              <span>&gt;80% Saturado</span>
+            </div>
+          </div>
+
+          <!-- Slider Interactivo -->
+          <div class="slider-section">
+            <div class="slider-top-row">
+              <span class="slider-title">Ajuste de punto de activación</span>
+              <span class="hysteresis-badge">
+                <span class="material-symbols-outlined icon-xs">tune</span>
+                ± 3.5% histéresis
+              </span>
+            </div>
+            <div class="range-wrapper">
+              <input type="range" id="moisture-slider" class="moisture-range" min="20" max="70" value="40" aria-label="Umbral mínimo de humedad">
+            </div>
+            <div class="range-bounds">
+              <span>20% (Seco)</span>
+              <span class="text-primary bold">40% Recomendado</span>
+              <span>70% (Húmedo)</span>
+            </div>
+          </div>
+
+          <!-- Perfiles Botánicos Rápidos -->
+          <div class="presets-section">
+            <span class="input-label">Perfiles Botánicos Rápidos</span>
+            <div class="presets-scroll" id="presets-container">
+              <button type="button" class="preset-chip active" data-preset="monstera" data-val="40">
+                <span class="material-symbols-outlined icon-sm">potted_plant</span>
+                <span>Monstera</span>
+                <span class="chip-pct">42%</span>
+              </button>
+              <button type="button" class="preset-chip" data-preset="suculentas" data-val="22">
+                <span class="material-symbols-outlined icon-sm text-tertiary">wb_sunny</span>
+                <span>Suculentas</span>
+                <span class="chip-pct">22%</span>
+              </button>
+              <button type="button" class="preset-chip" data-preset="tomates" data-val="52">
+                <span class="material-symbols-outlined icon-sm text-error">nutrition</span>
+                <span>Tomates</span>
+                <span class="chip-pct">52%</span>
+              </button>
+              <button type="button" class="preset-chip" data-preset="helechos" data-val="65">
+                <span class="material-symbols-outlined icon-sm text-secondary">forest</span>
+                <span>Helechos</span>
+                <span class="chip-pct">65%</span>
+              </button>
+            </div>
+          </div>
+        </article>
+
+        <!-- Sección 3: Dosificación y Pulso de Riego -->
+        <article class="card">
+          <div class="plant-identity">
+            <div class="icon-badge-soft bg-tertiary-soft-box text-tertiary">
+              <span class="material-symbols-outlined icon-lg">valve</span>
+            </div>
+            <div>
+              <h3 class="section-title">Dosificación y Pulso de Riego</h3>
+              <p class="card-subtitle">Relé 5V (GPIO23) y absorción gradual</p>
+            </div>
+          </div>
+
+          <!-- Stepper 1: Agua a suministrar -->
+          <div class="stepper-card">
+            <div class="stepper-info">
+              <div class="stepper-title-row">
+                <span class="material-symbols-outlined icon-sm text-secondary">water_drop</span>
+                <span class="stepper-title">Agua a suministrar</span>
+              </div>
+              <span class="stepper-sub">Volumen por ciclo de riego</span>
+            </div>
+            <div class="stepper-controls">
+              <button type="button" class="step-btn" id="vol-minus" aria-label="Reducir volumen">
+                <span class="material-symbols-outlined icon-sm">remove</span>
+              </button>
+              <span class="step-value" id="volume-val">250 ml</span>
+              <button type="button" class="step-btn" id="vol-plus" aria-label="Aumentar volumen">
+                <span class="material-symbols-outlined icon-sm">add</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Stepper 2: Dosificación por ciclo -->
+          <div class="stepper-card">
+            <div class="stepper-info">
+              <div class="stepper-title-row">
+                <span class="material-symbols-outlined icon-sm text-primary">timer</span>
+                <span class="stepper-title">Dosificación por ciclo</span>
+              </div>
+              <span class="stepper-sub">Tiempo encendido del solenoide</span>
+            </div>
+            <div class="stepper-controls">
+              <button type="button" class="step-btn" id="dur-minus" aria-label="Reducir duración">
+                <span class="material-symbols-outlined icon-sm">remove</span>
+              </button>
+              <span class="step-value" id="duration-val">15 seg</span>
+              <button type="button" class="step-btn" id="dur-plus" aria-label="Aumentar duración">
+                <span class="material-symbols-outlined icon-sm">add</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Insignia de Seguridad Watchdog Timer -->
+          <div class="watchdog-banner">
+            <span class="material-symbols-outlined icon-md text-primary shrink-0">verified_user</span>
+            <span>Protección activa por <strong>Watchdog Timer</strong>: corte seguro de bomba ante pérdida de conexión Wi-Fi o reinicio.</span>
+          </div>
+        </article>
+
+        <!-- Botones de Acción Final -->
+        <div class="actions-stack">
+          <button type="button" class="btn-save-config" id="btn-save-esp32">
+            <span class="material-symbols-outlined icon-md">save</span>
+            <span>Guardar configuración en ESP32</span>
+          </button>
+          <button type="button" class="btn-reset-defaults" id="btn-reset-defaults">
+            <span class="material-symbols-outlined icon-sm">restart_alt</span>
+            <span>Restablecer valores de fábrica</span>
+          </button>
+        </div>
+
+      </div>
+
+    </div>
+  </main>
+
+  <!-- BOTTOM NAVIGATION BAR -->
+  <nav class="bottom-nav">
+    <div class="bottom-nav-inner">
+      <a href="#inicio" class="nav-item active" data-target="inicio-panel" aria-current="page">
+        <span class="material-symbols-outlined nav-icon">energy_program_saving</span>
+        <span class="nav-label">Inicio</span>
+      </a>
+      <a href="#umbrales" class="nav-item" data-target="umbrales-y-horarios">
+        <span class="material-symbols-outlined nav-icon">tune</span>
+        <span class="nav-label">Umbrales</span>
+      </a>
+      <a href="#historial" class="nav-item" data-target="inicio-panel" data-scroll="historial-section">
+        <span class="material-symbols-outlined nav-icon">monitoring</span>
+        <span class="nav-label">Historial</span>
+      </a>
+      <a href="#diagnostico" class="nav-item" data-target="inicio-panel" data-scroll="diagnostico-section">
+        <span class="material-symbols-outlined nav-icon">memory</span>
+        <span class="nav-label">Diagnóstico</span>
+      </a>
+    </div>
+  </nav>
+
+  <script src="app.js"></script>
+</body>
+</html>
