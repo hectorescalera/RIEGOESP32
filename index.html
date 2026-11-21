@@ -26,40 +26,34 @@
         <div class="brand-info">
           <h1 class="brand-title">Riego Inteligente</h1>
           <div class="brand-meta">
-            <span class="node-version">ESP32 Node v2</span>
+            <span class="node-version">Panel de control</span>
             <span class="dot-separator">•</span>
-            <span class="online-pill">
+            <span class="online-pill connection-stale" id="connection-status">
               <span class="ping-wrapper">
-                <span class="ping-circle"></span>
+                <span class="ping-circle" hidden></span>
                 <span class="ping-dot"></span>
               </span>
-              <span class="online-text">Online</span>
+              <span class="online-text" id="connection-status-text">Conectando</span>
             </span>
           </div>
         </div>
       </div>
 
       <div class="header-actions">
-        <button type="button" class="icon-btn" id="header-sync-btn" aria-label="Actualizar datos">
-          <span class="material-symbols-outlined">sync</span>
-        </button>
         <a href="#umbrales" class="icon-btn nav-trigger" data-target="umbrales-y-horarios" aria-label="Ajustes y configuración">
           <span class="material-symbols-outlined">settings</span>
         </a>
-        <div class="user-avatar">
-          <span class="material-symbols-outlined">person</span>
-        </div>
       </div>
     </div>
   </header>
 
   <!-- TOAST NOTIFICATION CONTAINER (Pantalla Umbrales) -->
-  <div class="toast-esp32" id="toast-esp32" role="status" aria-live="polite">
+  <div class="toast-esp32" id="toast-esp32" role="status" aria-live="polite" aria-hidden="true">
     <div class="toast-left">
       <span class="material-symbols-outlined toast-icon">cloud_sync</span>
       <div class="toast-text-col">
-        <p class="toast-title" id="toast-title">Parámetros sincronizados</p>
-        <p class="toast-subtitle" id="toast-subtitle">Flash EEPROM del ESP32 actualizada con éxito.</p>
+        <p class="toast-title" id="toast-title">Aviso</p>
+        <p class="toast-subtitle" id="toast-subtitle">Los cambios se guardan en Supabase.</p>
       </div>
     </div>
     <button type="button" class="toast-close-btn" id="toast-close-btn" aria-label="Cerrar notificación">
@@ -72,7 +66,7 @@
     <div class="dashboard-stack">
 
       <!-- 1. BANNER DE CONEXIÓN HARDWARE IOT -->
-      <section class="hardware-banner" id="diagnostico-section">
+      <section class="hardware-banner connection-stale" id="diagnostico-section">
         <div class="hw-left">
           <div class="ping-wrapper-lg">
             <span class="ping-circle"></span>
@@ -80,18 +74,14 @@
           </div>
           <div class="hw-details">
             <div class="hw-title-row">
-              <span class="hw-status-title">ESP32 Online</span>
-              <span class="wifi-badge">
-                <span class="material-symbols-outlined icon-xs">wifi</span>
-                -58 dBm
-              </span>
+              <span class="hw-status-title" id="sensor-status-title">Esperando lectura del sensor</span>
             </div>
-            <span class="sync-timestamp" id="sync-timer">Última sincronización: Hace 12 seg</span>
+            <span class="sync-timestamp" id="sync-timer">Sin lecturas recibidas todavía</span>
           </div>
         </div>
 
         <div class="hw-right">
-          <span class="ip-badge">192.168.1.142</span>
+          <span class="hardware-tag">Sensor HW-080</span>
           <button type="button" class="refresh-circle-btn" id="refresh-btn" aria-label="Sincronizar telemetría">
             <span class="material-symbols-outlined icon-md" id="refresh-icon">sync</span>
           </button>
@@ -115,10 +105,6 @@
                 <span class="card-subtitle">Humedad del Suelo • HW-080</span>
               </div>
             </div>
-            <span class="calibrated-badge">
-              <span class="pulse-dot"></span>
-              HW-080 Calibrado
-            </span>
           </div>
 
           <!-- Gauge Semicircular Hero -->
@@ -134,17 +120,17 @@
                   </linearGradient>
                 </defs>
                 <path class="gauge-track" d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke-linecap="round" stroke-width="14"></path>
-                <path id="gauge-arc" class="gauge-progress" d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke="url(#gauge-grad)" stroke-dasharray="251.3" stroke-dashoffset="90.5" stroke-linecap="round" stroke-width="14"></path>
+                <path id="gauge-arc" class="gauge-progress" d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke="url(#gauge-grad)" stroke-dasharray="251.3" stroke-dashoffset="251.3" stroke-linecap="round" stroke-width="14"></path>
               </svg>
               <div class="gauge-readout">
-                <span class="metric-number" id="moisture-val">64</span>
+                <span class="metric-number" id="moisture-val">--</span>
                 <span class="metric-unit">%</span>
               </div>
             </div>
 
-            <div class="status-pill-optimal" id="moisture-status-pill">
-              <span class="material-symbols-outlined icon-sm filled-icon">eco</span>
-              <span class="status-pill-text" id="moisture-status-text">Húmedo • Nivel Óptimo</span>
+            <div class="status-pill-neutral" id="moisture-status-pill">
+              <span class="material-symbols-outlined icon-sm">sensors</span>
+              <span class="status-pill-text" id="moisture-status-text">Esperando lectura del sensor</span>
             </div>
           </div>
 
@@ -154,7 +140,7 @@
               <div class="zone-seg zone-very-dry" title="Muy Seco <20%"></div>
               <div class="zone-seg zone-dry" title="Seco 20-40%"></div>
               <div class="zone-seg zone-medium" title="Medio 40-60%"></div>
-              <div class="zone-seg zone-moist active-zone" title="Húmedo 60-80%"></div>
+              <div class="zone-seg zone-moist" title="Húmedo 60-80%"></div>
               <div class="zone-seg zone-wet" title="Muy Húmedo >80%"></div>
             </div>
             <div class="zones-labels">
@@ -223,11 +209,11 @@
           <div class="last-watering-footer">
             <span class="last-watering-time">
               <span class="material-symbols-outlined icon-sm text-outline">history</span>
-              Último riego: Hoy 08:30 AM
+              <span id="last-watering-time">Sin riegos registrados</span>
             </span>
             <span class="water-volume-pill">
               <span class="material-symbols-outlined icon-xs">opacity</span>
-              <span id="last-water-ml">250 ml</span> aplicados
+              <span id="last-water-ml">-- ml</span> aplicados
             </span>
           </div>
         </article>
@@ -241,75 +227,46 @@
               </div>
               <h3 class="section-title">Telemetría y Tendencias</h3>
             </div>
-            <span class="hardware-tag">Ciclo diario 24h</span>
+            <span class="hardware-tag">Últimas 60 lecturas</span>
           </div>
 
           <!-- Gráfica SVG 24h -->
           <div class="chart-box">
             <div class="chart-header">
-              <span class="chart-subtitle">Humedad vs Umbral (<span id="chart-threshold-label">40</span>%)</span>
-              <span class="chart-current-val">Lectura actual: 64%</span>
+              <span class="chart-subtitle">Humedad y umbral (<span id="chart-threshold-label">40</span>%)</span>
+              <span class="chart-current-val" id="chart-current-value">Sin lecturas todavía</span>
             </div>
 
             <div class="chart-svg-area">
               <svg class="telemetry-svg" viewBox="0 0 320 110" preserveAspectRatio="none">
-                <line x1="0" y1="66" x2="320" y2="66" stroke="#becabc" stroke-width="1" stroke-dasharray="3 3"></line>
-                <text id="svg-threshold-text" x="5" y="62" fill="#6f7a6e" font-family="Inter, sans-serif" font-size="9">Umbral 40%</text>
+                <line x1="0" y1="5" x2="320" y2="5" stroke="#becabc" stroke-width="1" stroke-dasharray="3 3"></line>
+                <line x1="0" y1="50" x2="320" y2="50" stroke="#becabc" stroke-width="1" stroke-dasharray="3 3"></line>
+                <line x1="0" y1="95" x2="320" y2="95" stroke="#becabc" stroke-width="1" stroke-dasharray="3 3"></line>
+                <line id="chart-threshold-line" x1="0" y1="59" x2="320" y2="59" stroke="#6f7a6e" stroke-width="1" stroke-dasharray="4 3"></line>
+                <text id="svg-threshold-text" x="5" y="55" fill="#6f7a6e" font-family="Inter, sans-serif" font-size="9">Umbral 40%</text>
                 <defs>
                   <linearGradient id="chart-fill" x1="0" y1="0" x2="0" y2="1">
                     <stop offset="0%" stop-color="#15803d" stop-opacity="0.28"></stop>
                     <stop offset="100%" stop-color="#15803d" stop-opacity="0.0"></stop>
                   </linearGradient>
                 </defs>
-                <path d="M 0,25 C 40,28 70,35 110,48 C 150,60 190,70 215,68 C 220,60 225,38 240,40 C 265,42 290,40 320,40 L 320,110 L 0,110 Z" fill="url(#chart-fill)"></path>
-                <path d="M 0,25 C 40,28 70,35 110,48 C 150,60 190,70 215,68 C 220,60 225,38 240,40 C 265,42 290,40 320,40" fill="none" stroke="#15803d" stroke-width="2.5" stroke-linecap="round"></path>
-                <circle cx="215" cy="68" r="4" fill="#006398" stroke="#ffffff" stroke-width="1.5"></circle>
-                <circle cx="320" cy="40" r="4.5" fill="#00652c" stroke="#ffffff" stroke-width="2"></circle>
+                <path id="chart-area-path" d="" fill="url(#chart-fill)"></path>
+                <path id="chart-line-path" d="" fill="none" stroke="#15803d" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"></path>
+                <circle id="chart-last-point" cx="0" cy="0" r="4.5" fill="#00652c" stroke="#ffffff" stroke-width="2" visibility="hidden"></circle>
               </svg>
             </div>
 
             <div class="chart-x-axis">
-              <span>Ayer 12:00</span>
-              <span>Ayer 20:00</span>
-              <span>Hoy 04:00</span>
-              <span class="text-secondary bold">08:30 (Riego)</span>
-              <span class="text-primary bold">Ahora (64%)</span>
+              <span id="chart-oldest-label">Más antigua</span>
+              <span id="chart-latest-label">Más reciente</span>
             </div>
           </div>
 
           <!-- Lista de Eventos Recientes -->
           <div class="events-list">
             <span class="events-section-label">Eventos Recientes</span>
-
-            <div class="event-item">
-              <div class="event-icon bg-sec-fixed text-secondary">
-                <span class="material-symbols-outlined icon-sm">water_drop</span>
-              </div>
-              <div class="event-content">
-                <span class="event-title">Riego automático activado</span>
-                <span class="event-meta">Hoy 08:30 AM — Duración 20s (umbral &lt;38% detectado)</span>
-              </div>
-            </div>
-
-            <div class="event-item">
-              <div class="event-icon bg-pri-fixed text-primary">
-                <span class="material-symbols-outlined icon-sm">sensors</span>
-              </div>
-              <div class="event-content">
-                <span class="event-title">Sensor HW-080 lectura estable</span>
-                <span class="event-meta">Hoy 04:15 AM — Humedad 48% (Nivel Medio)</span>
-              </div>
-            </div>
-
-            <div class="event-item">
-              <div class="event-icon bg-surface-container text-outline">
-                <span class="material-symbols-outlined icon-sm">cloud_sync</span>
-              </div>
-              <div class="event-content">
-                <span class="event-title">Sincronización NTP y telemetría MQTT</span>
-                <span class="event-meta">Ayer 06:00 PM — 0 paquetes perdidos (Broker Local)</span>
-              </div>
-            </div>
+            <div class="events-items" id="events-items"></div>
+            <p class="empty-state" id="events-empty">Cargando eventos…</p>
           </div>
         </article>
       </div>
@@ -374,7 +331,7 @@
             </div>
             <div class="vwc-box">
               <span class="vwc-value" id="moisture-display">40%</span>
-              <span class="vwc-label">VWC Mínimo</span>
+              <span class="vwc-label">Umbral de riego</span>
             </div>
           </div>
 
@@ -404,18 +361,13 @@
           <div class="slider-section">
             <div class="slider-top-row">
               <span class="slider-title">Ajuste de punto de activación</span>
-              <span class="hysteresis-badge">
-                <span class="material-symbols-outlined icon-xs">tune</span>
-                ± 3.5% histéresis
-              </span>
             </div>
             <div class="range-wrapper">
-              <input type="range" id="moisture-slider" class="moisture-range" min="20" max="70" value="40" aria-label="Umbral mínimo de humedad">
+              <input type="range" id="moisture-slider" class="moisture-range" min="0" max="100" value="40" aria-label="Umbral mínimo de humedad">
             </div>
             <div class="range-bounds">
-              <span>20% (Seco)</span>
-              <span class="text-primary bold">40% Recomendado</span>
-              <span>70% (Húmedo)</span>
+              <span>0% (Seco)</span>
+              <span>100% (Húmedo)</span>
             </div>
           </div>
 
@@ -426,7 +378,7 @@
               <button type="button" class="preset-chip active" data-preset="monstera" data-val="40">
                 <span class="material-symbols-outlined icon-sm">potted_plant</span>
                 <span>Monstera</span>
-                <span class="chip-pct">42%</span>
+                <span class="chip-pct">40%</span>
               </button>
               <button type="button" class="preset-chip" data-preset="suculentas" data-val="22">
                 <span class="material-symbols-outlined icon-sm text-tertiary">wb_sunny</span>
@@ -455,7 +407,7 @@
             </div>
             <div>
               <h3 class="section-title">Dosificación y Pulso de Riego</h3>
-              <p class="card-subtitle">Relé 5V (GPIO23) y absorción gradual</p>
+              <p class="card-subtitle">Relé del ESP32 en GPIO19 · control por cola en Supabase</p>
             </div>
           </div>
 
@@ -499,10 +451,10 @@
             </div>
           </div>
 
-          <!-- Insignia de Seguridad Watchdog Timer -->
+          <!-- Nota de seguridad de las órdenes -->
           <div class="watchdog-banner">
             <span class="material-symbols-outlined icon-md text-primary shrink-0">verified_user</span>
-            <span>Protección activa por <strong>Watchdog Timer</strong>: corte seguro de bomba ante pérdida de conexión Wi-Fi o reinicio.</span>
+            <span>Las órdenes pendientes caducan a los 2 minutos. El ESP32 apaga el relé al terminar cada ciclo.</span>
           </div>
         </article>
 
@@ -510,11 +462,11 @@
         <div class="actions-stack">
           <button type="button" class="btn-save-config" id="btn-save-esp32">
             <span class="material-symbols-outlined icon-md">save</span>
-            <span>Guardar configuración en ESP32</span>
+            <span id="save-config-label">Guardar configuración</span>
           </button>
           <button type="button" class="btn-reset-defaults" id="btn-reset-defaults">
             <span class="material-symbols-outlined icon-sm">restart_alt</span>
-            <span>Restablecer valores de fábrica</span>
+            <span>Restablecer valores predeterminados</span>
           </button>
         </div>
 
@@ -545,6 +497,7 @@
     </div>
   </nav>
 
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="app.js"></script>
 </body>
 </html>

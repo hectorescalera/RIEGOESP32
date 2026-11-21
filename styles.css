@@ -214,11 +214,33 @@ a {
   border-radius: var(--radius-full);
 }
 
+.online-pill.connection-online {
+  background-color: rgba(149, 248, 167, 0.4);
+}
+
+.online-pill.connection-stale {
+  background-color: rgba(255, 220, 195, 0.65);
+}
+
+.online-pill.connection-error {
+  background-color: rgba(255, 218, 214, 0.7);
+}
+
 .online-text {
   font-size: 10px;
   font-weight: 600;
   letter-spacing: 0.06em;
   color: var(--primary);
+}
+
+.connection-stale .online-text,
+.connection-stale .hw-status-title {
+  color: var(--tertiary);
+}
+
+.connection-error .online-text,
+.connection-error .hw-status-title {
+  color: var(--error);
 }
 
 .ping-wrapper {
@@ -265,6 +287,14 @@ a {
   height: 0.625rem;
   border-radius: var(--radius-full);
   background-color: var(--primary);
+}
+
+.ping-dot-lg.connection-stale {
+  background-color: var(--tertiary);
+}
+
+.ping-dot-lg.connection-error {
+  background-color: var(--error);
 }
 
 @keyframes ping {
@@ -501,6 +531,11 @@ a {
   border: 1px solid var(--surface-container);
 }
 
+#historial-section,
+#diagnostico-section {
+  scroll-margin-top: 6rem;
+}
+
 .refresh-circle-btn {
   width: 2.75rem;
   height: 2.75rem;
@@ -701,6 +736,22 @@ a {
   gap: 0.375rem;
   background-color: rgba(149, 248, 167, 0.7);
   color: var(--on-primary-fixed-variant);
+  padding: 0.25rem 0.875rem;
+  border-radius: var(--radius-full);
+}
+
+.status-pill-needs-water {
+  background-color: rgba(186, 26, 26, 0.14);
+  color: var(--error);
+}
+
+.status-pill-neutral {
+  margin-top: 0.75rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  background-color: var(--surface-container);
+  color: var(--on-surface-variant);
   padding: 0.25rem 0.875rem;
   border-radius: var(--radius-full);
 }
@@ -996,6 +1047,20 @@ a {
   padding-top: 0.25rem;
 }
 
+.events-items {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.empty-state {
+  color: var(--outline);
+  font-size: 12px;
+  padding: 0.75rem;
+  background-color: var(--surface-container-low);
+  border-radius: var(--radius-md);
+}
+
 .events-section-label {
   font-size: 11px;
   font-weight: 700;
@@ -1214,17 +1279,6 @@ a {
   align-items: center;
   font-size: 11px;
   color: var(--on-surface-variant);
-}
-
-.hysteresis-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.25rem;
-  font-weight: 600;
-  color: var(--primary);
-  background-color: rgba(0, 101, 44, 0.1);
-  padding: 0.125rem 0.5rem;
-  border-radius: var(--radius-full);
 }
 
 .range-wrapper {
@@ -1568,7 +1622,6 @@ a {
   }
 
   .scale-ticks span,
-  .range-bounds span,
   .chart-x-axis span {
     max-width: 20%;
     text-align: center;
